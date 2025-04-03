@@ -32,17 +32,24 @@ This project focuses on deploying a highly available web application across two 
 <h3 align="center">In the Azure (portal.azure.com)</h3>
 <br />
 <p>
-  Create a VM (EastUS-VM-HA) In this case, this is a VM created in the East US region & designed for High Avaiability.
+  Create a VM (EastUS-VM-HA) In this case, the VM is created in the East US region & designed for High Avaiability.
 </p>
 
 ![Screenshot 2025-03-29 220219](https://github.com/user-attachments/assets/e42616e7-85f3-4d0f-8816-0bff03a35e3e)
 ![Screenshot 2025-03-29 220305](https://github.com/user-attachments/assets/0b49f4f8-1f9c-4673-bfc8-f394526a72c3)
 ![Screenshot 2025-03-29 220322](https://github.com/user-attachments/assets/5712478c-34c5-4b7b-855e-0d0362ca390c)
+<br></br>
 
-
-![Screenshot 2025-03-29 220322](https://github.com/user-attachments/assets/b97bbdbd-0a15-4821-b1cc-0a6a99ac9e58)
+<p>
+An additional disk is not needed but if you will like to store logs & application data separately, you can create a New Disk & set the disk size to 64GB for extra storage
+</p>
 
 ![Screenshot 2025-03-29 223926](https://github.com/user-attachments/assets/933c7690-66fb-4766-a2b7-bc12ca00dcce)
+<br></br>
+
+<p>
+In the Networking Tab, you can create your VNet associated with your VM and its region. Do not assign a Public IP directly as the Load Balancer will handle external access. Allow RDP or SSH for inbound ports 
+</p>
 
 ![Screenshot 2025-03-29 230532](https://github.com/user-attachments/assets/a8b0acd4-b7ad-48b6-8835-bf04803035c1)
 
