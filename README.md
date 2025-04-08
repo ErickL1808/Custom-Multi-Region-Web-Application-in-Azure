@@ -124,12 +124,12 @@ Implement a Virtual Network Peering (Peer EastUS to WestUS) </br>
 ![Screenshot 2025-04-07 133818](https://github.com/user-attachments/assets/bdb39a6c-1c93-4d19-a86e-3569366e9cfc)
 ![Screenshot 2025-04-07 134914](https://github.com/user-attachments/assets/889c2433-d8b0-4efa-8f3e-342fc967e7bf)
 
-**<h3>Since both of the VM's were created with a private IP address**</h3>
- - **EastUS-VM-HA** - 10.30.1.4
- - **WestUS-VM-HA** - 10.40.2.4 </br>
+**<h1>Since both of the VM's were created with a private IP address**</h1>
+ - **EastUS-VM-HA**: 10.30.1.4
+ - **WestUS-VM-HA**: 10.40.2.4 </br>
  
-There are 2 ways to connect:
-1. **A jumpbox VM** within the VNet (Gives you a public-facing entry point into the network, apply NSG to restrict unknown IP addresses)
+<h2>There are 2 ways to connect:</h2>
+1. **A jumpbox VM** within the VNet (Gives you a public-facing entry point into the network, apply NSG to restrict unknown IP addresses) </br>
 2. **Using a VPN** (VPN Gateway configures a P2S VPN connection from a local machine to the Virtual Network) </br>
 ***(You can't access VMs with private IPs directly from the internet)***
 
@@ -159,13 +159,85 @@ Then ping **EastUS-VM-HA** (*10.30.1.4*) through the TestVM since only machines 
 
 ![Screenshot 2025-04-07 163322](https://github.com/user-attachments/assets/12ddbda1-ae1b-47d2-a4c8-3c686ce21c93)
 
-<h1>Azure VPN Gateway</h1>
+<h1>Azure Virtual Network Gateway (VPN)</h1>
 
-Create a VM (*TestVM*) in the **EastUS VNet** and connect to it via RDP from a local machine 
+Create a **VPN** (*EastUS-VPN*) </br>
+**Azure Portal > Search Virtual Network Gateway > Select the Create** </br>
+<code style="color : blue">(*Ignore the error*)</code>
 
+![Screenshot 2025-04-08 102553](https://github.com/user-attachments/assets/61b74575-3f67-4f01-b546-a2b8c5785641)
+![Screenshot 2025-04-08 102605](https://github.com/user-attachments/assets/d313688d-fbb1-402c-a5a8-a2ca4cf9b8d2)
 
+Set up a Point to Site VPN access after creating a VPN in Azure </br>
+**In Virtual Network Gateways > Select the VPN (*EastUS-VPN*) > Settings > Point-to-site Configuration** </br>
+- Used ***192.168.100.0/24*** as the address pool so it wont overlap with the **local network** (*172.20.10.x*) & the **VNet subnet** (*10.30.x.x.*) </br>
+- **IKEv2** & **OpenVPN** is a great Windows option delivering flexibility across devices. </br>
+- **Azure Certificate Authentication** does not require additional infrastructure and uses certificates to verify clients (**Secure & Manageable**)
 
+![Screenshot 2025-03-31 164132](https://github.com/user-attachments/assets/6735ef2c-91c6-4e45-8616-c1b90ddd9886)
 
+Generate a **self-signed root certificate** (*AzureVPNRootCert*) on the local machine </br>
+Open PowerShell and run ***$cert = New-SelfSignedCertificate*** command to generate a self-signed root certificate 
+
+![Screenshot 2025-03-31 164438](https://github.com/user-attachments/assets/c73b2d9f-8a08-4301-b011-85056399dde2)
+
+Open **Run** (*Win + R*), type ***certmgr.msc*** and **Enter** or type in *certificate* in the Windows search bar and select ***'Manage user certificates'***</br>
+Navigate to **Personal** > **Certificates**. Find ***AzureVPNRootCert.cer*** and right-click, choose **'All Task' > Export**
+
+![Screenshot 2025-03-31 140038](https://github.com/user-attachments/assets/d2371880-ae2e-4108-9557-e479b59358c1)
+
+**Do not export the private key** with the certificate & choose **Base-64 encoded X.508 (.CER)** as the file format.  </br>
+Save the file as **AzureVPNRootCert.cer**
+
+![Screenshot 2025-03-31 140111](https://github.com/user-attachments/assets/effd2d20-5be4-47e7-a340-3978158726ec)
+![Screenshot 2025-03-31 140136](https://github.com/user-attachments/assets/30c5afa0-c053-40c6-9f16-1ed687448ab6)
+![Screenshot 2025-03-31 140205](https://github.com/user-attachments/assets/21c121dd-bf84-4750-90c7-136f93476136)
+
+Open up **AzureVPNRootCert.cer** in *Notepad* </br>
+Copy the entire text *excluding* **---Begin Certificate---** & **---End Certificate---**
+
+![Screenshot 2025-03-31 140738](https://github.com/user-attachments/assets/58a51f2b-237d-4420-81e7-6c0593c6800b)
+
+Paste it in the **Public certificate data** box
+
+![image](https://github.com/user-attachments/assets/650cd128-196b-4468-a338-e345cb669249)
+
+Generate a **client certificate** (*AzureVPNClientCert*) for the local machine </br>
+Open PowerShell and run ***$cert = New-SelfSignedCertificate*** command to generate a client certificate
+
+![Screenshot 2025-03-31 164510](https://github.com/user-attachments/assets/a5d1661f-014d-4c5d-8992-e2e05acbb721)
+![image](https://github.com/user-attachments/assets/8e2fca98-a757-4efb-b82a-1a11e1cf0522)
+
+**Export the private key** with the certificate & choose **Personal Information Exchange - PKCS #12 (.PFX)** as the file format.  </br>
+
+![Screenshot 2025-03-31 164546](https://github.com/user-attachments/assets/f182c1bf-d210-4b5d-891c-230cd65a8af4)
+![Screenshot 2025-03-31 164627](https://github.com/user-attachments/assets/4247d876-d28d-4bb4-a361-9bdd2ea9e383)
+
+Create a **strong password for the private key** and change the encryption to ***AES256-SHA256*** (This will ensure the VPN setup is secure)</br>
+(**Tip**: AES256-SHA256 is more secure and uses stronger encryption algorithm. SHA1 is considered weak and outdated, while AES is widely used and recommened for modern security practices) </br>
+
+![Screenshot 2025-03-31 165135](https://github.com/user-attachments/assets/0770d72b-e2a4-422f-8401-3fb6f2fea99e)
+
+Download the **VPN Client** & extract it
+
+![Screenshot 2025-04-08 154407](https://github.com/user-attachments/assets/99360b55-964a-4211-b8e3-fb6158166628)
+![Screenshot 2025-03-31 165957](https://github.com/user-attachments/assets/515c5e32-1974-402f-8a3e-3e04d69e2bef)
+
+You extracted the VPN client and now see 5 folders. Proceed to the **WindowsAMD64 folder** if you're using a 64-bit Windows system & install
+
+![Screenshot 2025-03-31 170020](https://github.com/user-attachments/assets/4439e588-c1a6-4cfa-9aee-d128abcb19fe)
+![Screenshot 2025-03-31 170046](https://github.com/user-attachments/assets/f3f26232-affa-4608-a08b-c18a02e8ec02)
+![Screenshot 2025-03-31 170241](https://github.com/user-attachments/assets/e9a2295f-92aa-4837-9628-ae47f2bd8fd3)
+
+Connect to **Prod-VNet-EastUS**
+
+![Screenshot 2025-03-31 170705](https://github.com/user-attachments/assets/99dc43fc-b0b0-4fdc-8728-454cad7353c6)
+![Screenshot 2025-03-31 170746](https://github.com/user-attachments/assets/a8a825d1-0a6b-46f7-96ae-ccea55bbbfda)
+![Screenshot 2025-03-31 170809](https://github.com/user-attachments/assets/51e87493-c6fa-4a7c-b2a0-dbbf129abbb1)
+![Screenshot 2025-03-31 171122](https://github.com/user-attachments/assets/0996d578-3f1d-4c76-a308-546d14e4764e)
+![Screenshot 2025-03-30 224804](https://github.com/user-attachments/assets/88ca360a-6c2e-42dd-801a-ce1937a30b5a)
+![Screenshot 2025-03-31 171747](https://github.com/user-attachments/assets/90fb18a2-91f6-442c-a28a-9fbcd053bc19)
+![Screenshot 2025-03-31 171441](https://github.com/user-attachments/assets/061c1acb-6678-4863-acb1-576c65cf1cee)
 
 
 
