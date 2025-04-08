@@ -77,8 +77,95 @@ Add a frontend IP. Click '*Create new*' and name the IP address (*PublicWebAppIP
 Add a backend pool and name it (*EastUS-BackendPool*). Select the designated VNet. Click 'add' under IP configuration and select the VM associated to the Load Balancer. When done click 'add' then save
 ![Screenshot 2025-03-30 102242](https://github.com/user-attachments/assets/a770d4f1-cc6f-4bfb-a23d-b191d6cb2659)
 
-Create a name (*HTTP-LB-Rule*). Select the associated frontend IP address & backend pool. Since this rule is for HTTP traffic, use port 80 a
-![Screenshot 2025-03-30 103128](https://github.com/user-attachments/assets/ca99da17-eaaf-48af-a277-f958f9e9fa17)
+Create a name for the load balancing rule (*HTTP-LB-Rule*). Select the associated frontend IP address & backend pool. Since this rule is for HTTP traffic, use port 80 as the input. Then '*Click new*' to create a Health probe
+
+![Screenshot 2025-03-30 103128](https://github.com/user-attachments/assets/c2becebd-0783-4165-acab-b1a813376ebd)
+
+Give the Health probe a name (*HealthProbe-80*) . In this case, using port 80 with the HTTP protocol will monitor the health & status of HTTP traffic on the VM in your backend pool
+
+![Screenshot 2025-03-29 230548](https://github.com/user-attachments/assets/12c69c24-35fc-45d6-a6e3-1ac57e7b76d1)
+<br></br>
+
+Repeat and create another **load balancing rule** (*HTTPS-LB-Rule*) with a **Health probe** for HTTPS (*HealthProbe-443*)
+
+![Screenshot 2025-03-30 104812](https://github.com/user-attachments/assets/84a993c9-8656-4998-9ad1-5446d397ea75)
+
+Include the same key-value pairs for the tags as before and **create** the load balancer
+
+![Screenshot 2025-03-30 110302](https://github.com/user-attachments/assets/4a87efac-ae8a-4d28-a5ff-625d8d0ace76)
+
+**Repeat these steps & create another Load Balancer in the WestUS region**
+ - Load Balancer name (*WestUS-LB*)
+ - Frontend IP Configuration (*PublicWebAppIP-EastUS*)
+ - Backend Pool (*EastUS-BackendPool*)
+ - Load balancing rule with health probes (*HTTP/HTTPS*)
+</br> 
+
+Search **Traffic Manager** in the portal. Create a Traffic Manager Profile (*GlobalTrafficMgr*)
+
+![Screenshot 2025-03-30 220547](https://github.com/user-attachments/assets/17ef6b70-8a5d-454d-bb17-64cb4d016d4f)
+![Screenshot 2025-03-30 222128](https://github.com/user-attachments/assets/ad513c3a-2570-4dba-88e9-4dda39281073)
+
+Head to **Endpoint** in your Traffic Manager profile. Create an endpoint (*EastUS-LB-Endpoint*) & associate it with the assigned Public IP address </br> 
+***Tip**: When creating an endpoint, if you are using a public IP address as the target resource, you must assign a *DNS name label* to that public IP address in Azure
+
+![Screenshot 2025-03-30 225034](https://github.com/user-attachments/assets/3658066d-4d31-46f2-817e-dcb3a32e07f6)
+![Screenshot 2025-03-30 224804](https://github.com/user-attachments/assets/fe5e7d68-31e5-4d17-8f42-0c8a6cbccbb0)
+
+**Repeat and create an Endpoint for the WestUS region (*WestUS-LB-Endpoint*)**
+
+![Screenshot 2025-04-04 165537](https://github.com/user-attachments/assets/ade85403-b618-4a23-acca-3517da95651d)
+</br>
+
+Implement a Virtual Network Peering (Peer EastUS to WestUS) </br>
+**Azure Portal > Search Virtual Networks > Select the VNet (Prod-VNet-EastUS) > Settings > Peerings** </br>
+<code style="color : blue">(*Ignore the error*)</code>
+
+![Screenshot 2025-04-07 133818](https://github.com/user-attachments/assets/bdb39a6c-1c93-4d19-a86e-3569366e9cfc)
+![Screenshot 2025-04-07 134914](https://github.com/user-attachments/assets/889c2433-d8b0-4efa-8f3e-342fc967e7bf)
+
+**<h3>Since both of the VM's were created with a private IP address**</h3>
+ - **EastUS-VM-HA** - 10.30.1.4
+ - **WestUS-VM-HA** - 10.40.2.4 </br>
+ 
+There are 2 ways to connect:
+1. **A jumpbox VM** within the VNet (Gives you a public-facing entry point into the network, apply NSG to restrict unknown IP addresses)
+2. **Using a VPN** (VPN Gateway configures a P2S VPN connection from a local machine to the Virtual Network) </br>
+***(You can't access VMs with private IPs directly from the internet)***
+
+<h1>Jumpbox VM</h1>
+
+Create a VM (*TestVM*) in the **EastUS VNet** and connect to it via RDP from a local machine 
+
+![Screenshot 2025-03-31 100952](https://github.com/user-attachments/assets/95ed09eb-2981-4769-8a51-1dc6bbfcb6b8)
+
+After deploying the VM (*TestVM*) into the **Web-Subnet** (*10.30.1.0/24*), it will be assigned a private IP address (*10.30.1.7*) from that range </br>
+***(When running ipconfig /all, you are seeing the VM’s internal IP address, not its public IP)***
+
+![Screenshot 2025-04-07 154420](https://github.com/user-attachments/assets/79fe1846-8db4-4092-badd-a48d1c566deb)
+
+Remote into ***EastUS-VM-HA*** through the TestVM via RDP (*Private IP*: ***10.30.1.4***)
+
+![Screenshot 2025-04-07 162624](https://github.com/user-attachments/assets/563f258f-9848-45e1-87fd-dd7582986afa)
+![Screenshot 2025-04-07 162832](https://github.com/user-attachments/assets/64774458-8d10-42ae-9ad1-58a067a4c9d3)
+
+Ping **EastUS-VM-HA** (*10.30.1.4*) from the local machine</br>
+(Pings from my local machine or any device outside the VM's virtual network will not reach to the VM)
+
+![Screenshot 2025-04-07 163109](https://github.com/user-attachments/assets/c9c3aeaa-9607-4851-8587-c34a4cf6e8c5)
+
+Login to **EastUS-VM-HA** and make sure *ICMPv4* is enabled on the *local Windows Firewall*</br>
+Then ping **EastUS-VM-HA** (*10.30.1.4*) through the TestVM since only machines within the same VNet can connect to it </br>
+
+![Screenshot 2025-04-07 163322](https://github.com/user-attachments/assets/12ddbda1-ae1b-47d2-a4c8-3c686ce21c93)
+
+<h1>Azure VPN Gateway</h1>
+
+Create a VM (*TestVM*) in the **EastUS VNet** and connect to it via RDP from a local machine 
+
+
+
+
 
 
 
