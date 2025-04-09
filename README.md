@@ -1,5 +1,5 @@
 <h1>Custom Multi-Region Web Application in Azure </h1>
-This project focuses on deploying a highly available web application across two Azure regions using Azure Load Balancers & Traffic manager for cross-region failover. A virtual network peering was implemented for seamless connection between regions. In addition, to enhance security, NSGs were applied with security rules, DDoS protection, custom subnets for network segmentation & traffic management & a VPN Gateway was also configured to securely connect an on-premises resourse to Azure. This tutorial provides a guide on implementing a 
+This project focuses on deploying a highly available web application across two Azure regions using Load Balancers & Traffic manager for cross-region failover. Virtual network peering was implemented to enable seamless and secure connectivity between the East US and West US regions. In addition, to enhance security, NSGs were applied with security rules, DDoS protection, custom subnets & a Virtual Network Gateway (VPN) was configured to securely connect an on-premises resource to Azure. This tutorial provides a guide on deploying VMs with a private IP address & implementing a load balancer to manage all incoming traffic efficiently. Load balancing was configured for both HTTP and HTTPS protocols, each paired with a health probe to monitor backend VM responsiveness and ensure service availability. The environment is segmented using custom subnets which improves manageability and security. Web-Subnet, which hosts the frontend VM, receives user traffic. App-Subnet, which handles the application server and is only accessible internally. DB-Subnet, which securely stores & manages the database server using private endpoints for security.
 <br />
 
 <h2>Technologies Used in This Project</h2>
@@ -20,11 +20,11 @@ This project focuses on deploying a highly available web application across two 
 **Security & Access Control**
 - Network Security Groups (NSGs)
 - DDos Protection
-- Remote Desktop
+- Windows Defender Firewall
+- Subnet isolation
 
 **Windows**
 - PowerShell
-- Windows Defender Firewall
 - RDP
 - Certificate Manager (certmgr)
 
@@ -32,8 +32,9 @@ This project focuses on deploying a highly available web application across two 
 <h3 align="center">In the Azure (portal.azure.com)</h3>
 <br />
 
-In the **Basic Tab**, Create a VM (*EastUS-VM-HA*) In this case, the VM is created in the East US region & designed to enhance fault tolerance & high avaiability.
-Create a Username & strong password. Select *"none"* for public inbound ports (To enhance security by limiting direct exposure to the internet)
+In the **Basic Tab**, Create a VM (*EastUS-VM-HA*) in the East US region </br>
+Create a Username & strong password. Select *"none"* for public inbound ports (*To enhance security by limiting direct exposure to the internet*)
+
 ![Screenshot 2025-03-29 220219](https://github.com/user-attachments/assets/e42616e7-85f3-4d0f-8816-0bff03a35e3e)
 ![Screenshot 2025-03-29 220305](https://github.com/user-attachments/assets/0b49f4f8-1f9c-4673-bfc8-f394526a72c3)
 ![Screenshot 2025-03-29 220322](https://github.com/user-attachments/assets/5712478c-34c5-4b7b-855e-0d0362ca390c)
@@ -44,6 +45,7 @@ In the **Disk Tab**, create a new disk & set the disk size to 64GB for extra sto
 <br></br>
 
 In the **Networking Tab**, create a VNet (*Prod-VNet-EastUS*) associated with your VM and its designated region. Within the VNet, setup a **Web-Subnet (10.30.1.0/24)** to isolate & manage web traffic. Do not assign a Public IP directly, the Load Balancer will handle external access.
+
 ![Screenshot 2025-03-29 230548](https://github.com/user-attachments/assets/7d760980-bc52-414e-b9bd-76f95445e9dc)
 ![Screenshot 2025-03-29 230548](https://github.com/user-attachments/assets/5da813a6-77cf-4216-bf5f-504b2eae7e25)
 <br></br>
@@ -53,6 +55,7 @@ In the **Management Tab**, for patch orchestration options, select Azure-Orchest
 <br></br>
 
 In the **Monitoring Tab**, enable application health monitoring which will monitor the health of applications running inside the VM 
+
 ![Screenshot 2025-03-29 233603](https://github.com/user-attachments/assets/c5579ab1-a2a4-459f-8941-029fc9bdf544)
 <br></br>
 
@@ -65,23 +68,28 @@ In the **Tags Tab**, create your own form of key-value pairs which helps organiz
 (Deploy a secondary VNet in WestUS for failover)
   - Virtual Machine (WestUS-VM-HA)
   - VNet (Prod-VNet-WestUS)
-      - Subnet- 10.40.1.0/24
+      - WebSubnet- *10.40.1.0/24*
 ![Screenshot 2025-03-30 013121](https://github.com/user-attachments/assets/ee312efd-2799-4e7b-bd34-91729455d436)
 
-Create a Load Balancer (*EastUS-LB*) for the designated region & select 'Public', which allows incoming traffic from the internet to be distributed to the backend VM 
+Add a **App-Subnet** (*10.30.2.0/24*) &  a **DB-Subnet** (*10.30.3.0/24*) </br>
+
+![image](https://github.com/user-attachments/assets/73aa8b35-6fc2-430a-b96e-c4cc440cc012)
+![image](https://github.com/user-attachments/assets/9aeb199d-e177-4329-9eb0-69067e49210d)
+
+Create a **Load Balancer** (*EastUS-LB*) for the designated region & select 'Public', which allows incoming traffic from the internet to be distributed to the backend VM 
 ![Screenshot 2025-03-30 014300](https://github.com/user-attachments/assets/2bb6aaf5-b335-4466-a039-620de6cfe32f)
 
-Add a frontend IP. Click '*Create new*' and name the IP address (*PublicWebAppIP-EastUS*)
+Add a **frontend IP**. Click '*Create new*' and name the IP address (*PublicWebAppIP-EastUS*)
 ![Screenshot 2025-03-30 100926](https://github.com/user-attachments/assets/47130496-6fa2-46a0-90cc-aba1c1c29f8f)
 
-Add a backend pool and name it (*EastUS-BackendPool*). Select the designated VNet. Click 'add' under IP configuration and select the VM associated to the Load Balancer. When done click 'add' then save
+Add a **backend pool** and name it (*EastUS-BackendPool*). Select the designated VNet. Click 'add' under IP configuration and select the VM associated to the Load Balancer. When done click 'add' then save
 ![Screenshot 2025-03-30 102242](https://github.com/user-attachments/assets/a770d4f1-cc6f-4bfb-a23d-b191d6cb2659)
 
-Create a name for the load balancing rule (*HTTP-LB-Rule*). Select the associated frontend IP address & backend pool. Since this rule is for HTTP traffic, use port 80 as the input. Then '*Click new*' to create a Health probe
+Create a name for the **load balancing rule** (*HTTP-LB-Rule*). Select the associated frontend IP address & backend pool. Since this rule is for HTTP traffic, use port 80 as the input. Then '*Click new*' to create a Health probe
 
 ![Screenshot 2025-03-30 103128](https://github.com/user-attachments/assets/c2becebd-0783-4165-acab-b1a813376ebd)
 
-Give the Health probe a name (*HealthProbe-80*) . In this case, using port 80 with the HTTP protocol will monitor the health & status of HTTP traffic on the VM in your backend pool
+Give the **Health probe** a name (*HealthProbe-80*) . In this case, using port 80 with the HTTP protocol will monitor the health & status of HTTP traffic on the VM in your backend pool
 
 ![Screenshot 2025-03-29 230548](https://github.com/user-attachments/assets/12c69c24-35fc-45d6-a6e3-1ac57e7b76d1)
 <br></br>
@@ -123,6 +131,22 @@ Implement a Virtual Network Peering (Peer EastUS to WestUS) </br>
 
 ![Screenshot 2025-04-07 133818](https://github.com/user-attachments/assets/bdb39a6c-1c93-4d19-a86e-3569366e9cfc)
 ![Screenshot 2025-04-07 134914](https://github.com/user-attachments/assets/889c2433-d8b0-4efa-8f3e-342fc967e7bf)
+![Screenshot 2025-04-01 122926](https://github.com/user-attachments/assets/08e28f5f-383b-47f9-a8f9-21e2c08a8ebf)
+<br></br>
+
+Create a **NSG** and **apply an inbound rule** to allow **HTTP** & **HTTPS** traffic coming from the public IP address of the **Load balancer** (*EastUS-LB*) </br>
+**Azure Portal > Search Network Security Groups (*WebSubnet-EastUS-nsg*) > Click 'Create'** </br>
+
+![image](https://github.com/user-attachments/assets/4e5b1435-318d-446d-8903-cb87fb01ff3f)
+![Screenshot 2025-04-01 134911](https://github.com/user-attachments/assets/e73c09da-6fe3-428f-9b06-d4b04f7ddc2a)
+![Screenshot 2025-04-01 135704](https://github.com/user-attachments/assets/1eb880c0-26fb-402e-9f83-983db4c506f8)
+
+Create another **inbound rule** to allow secure **administrative access** to VMs in the Web-Subnet</br>
+(Don't forget to do the same and repeat for the ***West US region***) 
+
+![Screenshot 2025-04-01 162638](https://github.com/user-attachments/assets/5755d9a0-f38f-447b-afe5-f38426440d07)
+
+
 
 **<h1>Since both of the VM's were created with a private IP address**</h1>
  - **EastUS-VM-HA**: 10.30.1.4
@@ -239,33 +263,9 @@ Connect to **Prod-VNet-EastUS**
 ![Screenshot 2025-03-31 171747](https://github.com/user-attachments/assets/90fb18a2-91f6-442c-a28a-9fbcd053bc19)
 ![Screenshot 2025-03-31 171441](https://github.com/user-attachments/assets/061c1acb-6678-4863-acb1-576c65cf1cee)
 
-
-
-This VM will be configured with a Private IP address only. 
-
-"When setting up a Virtual Machine in Azure, I need to ensure high availability, scalability, and fault tolerance. Instead of using the default VNet, I would design a custom networking architecture that supports a globally distributed application."
-
-Step-by-Step Guide: Configuring High Availability, Load Balancing, and Security in Azure
-
-
-When enabling "none" for Public Inbound ports, all traffic from the internet will be blocked by default. You can change the inbound port rule 
-	****(Public IP: Choose None (since Load Balancer will manage traffic)***
-
-
-Choosing the Frontend IP for Your Load Balancer in Azure
-When creating a Load Balancer for your High-Availability Web Application, the Frontend IP Configuration tab requires you to specify an IP address that clients will use to access your application.
-
-Each load-balancing rule (one for HTTP, one for HTTPS) needs an associated health probe to determine whether a backend VM is responsive for that specific protocol.
-
-
-Health Probe checks if your backend VMs are responding correctly. When path is set to "/", the probe will send HTTP request to / (the root of your web server) verify it is running.
-
-Routing Preference:
-Determines how your traffic routes between Azure and the Internet
-Microsoft Network - Selecting Microsoft global network delivers traffic via Microsoft global network closest to user. 
-Internet - Uses transit ISP network. 
-Routing preference option of a Public IP can’t be changed once created
-nd select Microsoft network as the routing preference (Delivers traffic via Microsofts global network to users) 
+I hope this tutorial helped you learn a little bit about Network Security Protocols, subnets, Virutal Networks, load balancers, Virtual network gateway & Virtual Machines
+Now that we're done, DON'T FORGET TO CLEAN UP YOUR AZURE ENVIRONMENT so that you don't incur unnecessary charges.
+Close your Remote Desktop connection, delete the Resource Group(s) created at the beginning of this tutorial, and verify Resource Group deletion.
 
 
 
@@ -274,7 +274,6 @@ nd select Microsoft network as the routing preference (Delivers traffic via Micr
 
 
 
- 
 
 
 
