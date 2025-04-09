@@ -69,14 +69,23 @@ In the **Tags Tab**, create your own form of key-value pairs which helps organiz
   - Virtual Machine (WestUS-VM-HA)
   - VNet (Prod-VNet-WestUS)
       - WebSubnet- *10.40.1.0/24*
+  
 ![Screenshot 2025-03-30 013121](https://github.com/user-attachments/assets/ee312efd-2799-4e7b-bd34-91729455d436)
 
-Add a **App-Subnet** (*10.30.2.0/24*) &  a **DB-Subnet** (*10.30.3.0/24*) </br>
+Add a **App-Subnet** (*10.30.2.0/24*) &  a **DB-Subnet** (*10.30.3.0/24*) in the **East US region** (*Prod-VNet-EastUS*)</br>
+<code style="color : blue">(*Ignore the error*)</code>
 
 ![image](https://github.com/user-attachments/assets/73aa8b35-6fc2-430a-b96e-c4cc440cc012)
 ![image](https://github.com/user-attachments/assets/9aeb199d-e177-4329-9eb0-69067e49210d)
 
+**Repeat these steps for the West US region** (*Prod-VNet-WestUS*)
+ - **App-Subnet**: 10.40.2.0/24
+ - **DB-Subnet**: 10.40.3.0/24
+
+![image](https://github.com/user-attachments/assets/51a5807d-e39b-4811-9d65-85e22867a0ff)
+
 Create a **Load Balancer** (*EastUS-LB*) for the designated region & select 'Public', which allows incoming traffic from the internet to be distributed to the backend VM 
+
 ![Screenshot 2025-03-30 014300](https://github.com/user-attachments/assets/2bb6aaf5-b335-4466-a039-620de6cfe32f)
 
 Add a **frontend IP**. Click '*Create new*' and name the IP address (*PublicWebAppIP-EastUS*)
@@ -141,10 +150,17 @@ Create a **NSG** and **apply an inbound rule** to allow **HTTP** & **HTTPS** tra
 ![Screenshot 2025-04-01 134911](https://github.com/user-attachments/assets/e73c09da-6fe3-428f-9b06-d4b04f7ddc2a)
 ![Screenshot 2025-04-01 135704](https://github.com/user-attachments/assets/1eb880c0-26fb-402e-9f83-983db4c506f8)
 
-Create another **inbound rule** to allow secure **administrative access** to VMs in the Web-Subnet</br>
+Create another **inbound rule** to allow secure **administrative access** (*Local Machine*) to VMs in the Web-Subnet</br>
 (Don't forget to do the same and repeat for the ***West US region***) 
 
 ![Screenshot 2025-04-01 162638](https://github.com/user-attachments/assets/5755d9a0-f38f-447b-afe5-f38426440d07)
+
+Create a **NSG** for **App-Subnet** &  a **DB-Subnet** for both regions. </br>
+Associate each **NSG** with their corresponding subnet under *setting*
+
+![Screenshot 2025-04-01 164312](https://github.com/user-attachments/assets/c51a1b38-b360-48eb-a46f-ae54ded50995)
+![Screenshot 2025-04-01 164340](https://github.com/user-attachments/assets/5116f99f-2b67-47b9-94f9-ca317e77d3c5)
+
 
 
 
