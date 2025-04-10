@@ -155,16 +155,34 @@ Create another **inbound rule** to allow secure **administrative access** (*Loca
 
 ![Screenshot 2025-04-01 162638](https://github.com/user-attachments/assets/5755d9a0-f38f-447b-afe5-f38426440d07)
 
-Create a **NSG** for **App-Subnet** &  a **DB-Subnet** for both regions. </br>
-Associate each **NSG** with their corresponding subnet under *setting*
+Create **NSGs** for the **App-Subnet** and **DB-Subnet** in both regions. Then associate each **NSG** with their corresponding subnet under *setting*
 
 ![Screenshot 2025-04-01 164312](https://github.com/user-attachments/assets/c51a1b38-b360-48eb-a46f-ae54ded50995)
 ![Screenshot 2025-04-01 164340](https://github.com/user-attachments/assets/5116f99f-2b67-47b9-94f9-ca317e77d3c5)
+![Screenshot 2025-04-01 164522](https://github.com/user-attachments/assets/0f352dd8-38d1-41d9-a5c6-ce0ac04ccd63)
 
+Create a **inbound rule** (*Allow-WebToApp*) to allow web traffic from the **Web-Subnet** (*10.30.1.0*) to reach the **App-Subnet** </br>
+(*Any VM in the Web-Subnet can initiate traffic to VMs in the App-Subnets. Without this rule, the NSG would block the traffic by default*) 
 
+![Screenshot 2025-04-01 172311](https://github.com/user-attachments/assets/7b07865a-585b-4991-8668-1e73e054e884)
 
+Create a **inbound rule** in the **AppSubnet-EastUS-nsg** which allows traffic from the **App-Subnet** to reach the **DB-Subnet** </br>
+(*Allows application servers in the App-Subnet to initiate connection to the database servers in the DB-Subnet*)
 
-**<h1>Since both of the VM's were created with a private IP address**</h1>
+![Screenshot 2025-04-01 172912](https://github.com/user-attachments/assets/0039a168-34d6-4641-bd5e-cd341b401d59)
+
+Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to allow traffic from the *10.30.2.0/24* IP range to **destination ports 1433 & 3306** </br>
+(*This enables secure database access from the application subnet*)
+
+![Screenshot 2025-04-02 115752](https://github.com/user-attachments/assets/54f19ac0-e3ad-4d5e-aaa6-a325a42f631e)
+
+Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to deny traffic from the **Web-Subnet** (*10.40.1.0/24*) </br>
+(*This prevents unauthorized access from the Web-Subnet to the DB-Subnet*)
+
+![Screenshot 2025-04-02 115917](https://github.com/user-attachments/assets/90326907-b615-49cc-9b42-31961b0b0549)
+
+**<h1>Since both of the VM's were![Uploading Screenshot 2025-04-02 115917.png…]()
+ created with a private IP address**</h1>
  - **EastUS-VM-HA**: 10.30.1.4
  - **WestUS-VM-HA**: 10.40.2.4 </br>
  
