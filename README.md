@@ -1,5 +1,5 @@
 <h1>Custom Multi-Region Web Application in Azure </h1>
-This project focuses on deploying a highly available web application across two Azure regions using Load Balancers & Traffic manager for cross-region failover. Virtual network peering was implemented to enable seamless and secure connectivity between the East US and West US regions. In addition, to enhance security, NSGs were applied with security rules, DDoS protection, custom subnets & a Virtual Network Gateway (VPN) was configured to securely connect an on-premises resource to Azure. This tutorial provides a guide on deploying VMs with a private IP address & implementing a load balancer to manage all incoming traffic efficiently. Load balancing was configured for both HTTP and HTTPS protocols, each paired with a health probe to monitor backend VM responsiveness and ensure service availability. The environment is segmented using custom subnets which improves manageability and security. Web-Subnet, which hosts the frontend VM, receives user traffic. App-Subnet, which handles the application server and is only accessible internally. DB-Subnet, which securely stores & manages the database server using private endpoints for security.
+This project focuses on deploying a highly available web application across two Azure regions using Load Balancers & Traffic manager for cross-region failover. It guides you through deploying VMs with private IP addresses and configuring load balancers to efficiently manage all incoming traffic. Load balancing was configured for both HTTP and HTTPS protocols, each paired with a health probe to monitor backend VM responsiveness and ensure service availability. The infrastructure is segmented into custom subnets which improves manageability and security. The Web-Subnet hosts the frontend VM and handles incoming user traffic, the App-Subnet manages the application server and is accessible only internally and the DB-Subnet secures database access using private endpoints. To enforce least privilege and eliminate internet exposure, Network Security Groups are applied to each subnet to control inbound/outbound traffic. Additionally, Virtual Network Peering is configured between the East US and West US VNets to enable seamless and secure communication across regions. A VPN Gateway is also implemented allowing secure remote connectivity with the VNet for management and administrative access.
 <br />
 
 <h2>Technologies Used in This Project</h2>
@@ -179,6 +179,8 @@ Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to allow traffic from t
 Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to deny traffic from the **Web-Subnet** (*10.40.1.0/24*) </br>
 (*This prevents unauthorized access from the Web-Subnet to the DB-Subnet*)
 
+Create a DDoS Portection Place
+
 ![Screenshot 2025-04-02 115917](https://github.com/user-attachments/assets/90326907-b615-49cc-9b42-31961b0b0549)
 
 **<h1>Since both of the VM's were![Uploading Screenshot 2025-04-02 115917.png…]()
@@ -303,8 +305,9 @@ Close your Remote Desktop connection, delete the Resource Group(s) created at th
 
 
 
+Virtual network peering was implemented to enable seamless and secure connectivity between the East US and West US regions. In addition, to enhance security, NSGs were applied with security rules, custom subnets & a Virtual Network Gateway (VPN) was configured to securely connect an on-premises resource to Azure. 
 
-
+This project focuses on deploying a highly available web application across two Azure regions using Load Balancers & Traffic manager for cross-region failover. Load balancing was configured for both HTTP and HTTPS protocols, each paired with a health probe to monitor backend VM responsiveness and ensure service availability. The environment is segmented using custom subnets which improves manageability and security. Web-Subnet, which hosts the frontend VM, receives user traffic. App-Subnet, which handles the application server and is only accessible internally. DB-Subnet, which securely stores & manages the database server using private endpoints for security.
 
 
 
