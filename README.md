@@ -101,7 +101,8 @@ Create a name for the **load balancing rule** (*HTTP-LB-Rule*). Select the assoc
 
 ![Screenshot 2025-03-30 103128](https://github.com/user-attachments/assets/c2becebd-0783-4165-acab-b1a813376ebd)
 
-Name the **Health probe** (*HealthProbe-80*) In this case, using port 80 with the HTTP protocol will monitor the health & status of HTTP traffic on the VM in your backend pool
+Name the **Health probe** (*HealthProbe-80*) and use **port 80** (*HTTP*) </br>
+(*Port 80 with the HTTP protocol will monitor the health & status of HTTP traffic on the VM in your backend pool*)
 
 ![Screenshot 2025-03-29 230548](https://github.com/user-attachments/assets/12c69c24-35fc-45d6-a6e3-1ac57e7b76d1)
 <br></br>
@@ -116,8 +117,8 @@ Include the same key-value pairs for the tags as before and **create** the load 
 
 **Repeat these steps & create another Load Balancer in the WestUS region**
  - Load Balancer name (*WestUS-LB*)
- - Frontend IP Configuration (*PublicWebAppIP-EastUS*)
- - Backend Pool (*EastUS-BackendPool*)
+ - Frontend IP Configuration (*PublicWebAppIP-WestUS*)
+ - Backend Pool (*WestUS-BackendPool*)
  - Load balancing rule with health probes (*HTTP/HTTPS*)
 </br> 
 
@@ -126,8 +127,8 @@ Search **Traffic Manager** in the portal. Create a Traffic Manager Profile (*Glo
 ![Screenshot 2025-03-30 220547](https://github.com/user-attachments/assets/17ef6b70-8a5d-454d-bb17-64cb4d016d4f)
 ![Screenshot 2025-03-30 222128](https://github.com/user-attachments/assets/ad513c3a-2570-4dba-88e9-4dda39281073)
 
-Head to **Endpoint** in your Traffic Manager profile. Create an endpoint (*EastUS-LB-Endpoint*) & associate it with the assigned Public IP address </br> 
-***Tip**: When creating an endpoint, if you are using a public IP address as the target resource, you must assign a *DNS name label* to that public IP address in Azure
+Go to **Endpoints** in your Traffic Manager profile. Add an **Endpoint** (*EastUS-LB-Endpoint*) & associate it with the assigned **Public IP address** </br> 
+(*Azure Traffic Manager requires FDQN for its' endpoints and public IP addresses alone do not provide an FQDN by default. You must assign a DNS name label to the public IP address if you are using one as the target when creating an endpoint*)
 
 ![Screenshot 2025-03-30 225034](https://github.com/user-attachments/assets/3658066d-4d31-46f2-817e-dcb3a32e07f6)
 ![Screenshot 2025-03-30 224804](https://github.com/user-attachments/assets/fe5e7d68-31e5-4d17-8f42-0c8a6cbccbb0)
@@ -137,7 +138,7 @@ Head to **Endpoint** in your Traffic Manager profile. Create an endpoint (*EastU
 ![Screenshot 2025-04-04 165537](https://github.com/user-attachments/assets/ade85403-b618-4a23-acca-3517da95651d)
 </br>
 
-Implement a Virtual Network Peering (Peer EastUS to WestUS) </br>
+Implement a **Virtual Network Peering** (*Peer EastUS to WestUS*) </br>
 **Azure Portal > Search Virtual Networks > Select the VNet (Prod-VNet-EastUS) > Settings > Peerings** </br>
 <code style="color : blue">(*Ignore the error*)</code>
 
@@ -146,15 +147,16 @@ Implement a Virtual Network Peering (Peer EastUS to WestUS) </br>
 ![Screenshot 2025-04-01 122926](https://github.com/user-attachments/assets/08e28f5f-383b-47f9-a8f9-21e2c08a8ebf)
 <br></br>
 
-Create a **NSG** and **apply an inbound rule** to allow **HTTP** & **HTTPS** traffic coming from the public IP address of the **Load balancer** (*EastUS-LB*) </br>
-**Azure Portal > Search Network Security Groups (*WebSubnet-EastUS-nsg*) > Click 'Create'** </br>
+Create a **NSG** (*WebSubnet-EastUS-nsg*) & **apply a rule** to allow **HTTP/HTTPS** traffic from the public IP address of the **Load balancer** (*EastUS-LB*) </br>
+**Azure Portal > Search Network Security Groups > Click 'Create'** </br>
+(*Don't forget to do the same and repeat for the West US region*)
 
 ![image](https://github.com/user-attachments/assets/4e5b1435-318d-446d-8903-cb87fb01ff3f)
 ![Screenshot 2025-04-01 134911](https://github.com/user-attachments/assets/e73c09da-6fe3-428f-9b06-d4b04f7ddc2a)
 ![Screenshot 2025-04-01 135704](https://github.com/user-attachments/assets/1eb880c0-26fb-402e-9f83-983db4c506f8)
 
-Create another **inbound rule** to allow secure **administrative access** (*Local Machine*) to VMs in the Web-Subnet</br>
-(Don't forget to do the same and repeat for the ***West US region***) 
+Create another **inbound rule** to allow secure **administrative access** (*Local Machine*) to the VM in the Web-Subnet</br>
+(*Don't forget to do the same and repeat for the* ***West US region***) 
 
 ![Screenshot 2025-04-01 162638](https://github.com/user-attachments/assets/5755d9a0-f38f-447b-afe5-f38426440d07)
 
@@ -164,46 +166,45 @@ Create **NSGs** for the **App-Subnet** and **DB-Subnet** in both regions. Then a
 ![Screenshot 2025-04-01 164340](https://github.com/user-attachments/assets/5116f99f-2b67-47b9-94f9-ca317e77d3c5)
 ![Screenshot 2025-04-01 164522](https://github.com/user-attachments/assets/0f352dd8-38d1-41d9-a5c6-ce0ac04ccd63)
 
-Create a **inbound rule** (*Allow-WebToApp*) to allow web traffic from the **Web-Subnet** (*10.30.1.0*) to reach the **App-Subnet** </br>
+Create a **inbound rule** (*Allow-WebToApp*) to allow web traffic from the **Web-Subnet** (*10.30.1.0/24*) to reach the **App-Subnet**</br>
 (*Any VM in the Web-Subnet can initiate traffic to VMs in the App-Subnets. Without this rule, the NSG would block the traffic by default*) 
 
 ![Screenshot 2025-04-01 172311](https://github.com/user-attachments/assets/7b07865a-585b-4991-8668-1e73e054e884)
 
-Create a **inbound rule** in the **AppSubnet-EastUS-nsg** which allows traffic from the **App-Subnet** to reach the **DB-Subnet** </br>
+Create a **inbound rule** (*Allow-AppToDB*) to allow traffic from the **App-Subnet** to reach the **DB-Subnet** (*10.30.3.0/24*) via port 1433 & port 3306</br>
 (*Allows application servers in the App-Subnet to initiate connection to the database servers in the DB-Subnet*)
 
 ![Screenshot 2025-04-01 172912](https://github.com/user-attachments/assets/0039a168-34d6-4641-bd5e-cd341b401d59)
 
-Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to allow traffic from the *10.30.2.0/24* IP range to **destination ports 1433 & 3306** </br>
+Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to allow traffic from the **App-Subnet** (*10.40.2.0/24*) to **destination ports 1433 & 3306** </br>
 (*This enables secure database access from the application subnet*)
 
 ![Screenshot 2025-04-02 115752](https://github.com/user-attachments/assets/54f19ac0-e3ad-4d5e-aaa6-a325a42f631e)
 
 Create a **inbound rule** in the **DBSubnet-WestUS-nsg** to deny traffic from the **Web-Subnet** (*10.40.1.0/24*) </br>
-(*This prevents unauthorized access from the Web-Subnet to the DB-Subnet*)
-
-Create a DDoS Portection Place
+(*This prevents unauthorized access from the Web-Subnet to the DB-Subnet*) </br>
+(***Don't forget to do the same and repeat for the other region***) 
 
 ![Screenshot 2025-04-02 115917](https://github.com/user-attachments/assets/90326907-b615-49cc-9b42-31961b0b0549)
 
-**<h1>Since both of the VM's were![Uploading Screenshot 2025-04-02 115917.png…]()
- created with a private IP address**</h1>
+**<h1>Since both of the VM's were created with a private IP address**</h1>
  - **EastUS-VM-HA**: 10.30.1.4
  - **WestUS-VM-HA**: 10.40.2.4 </br>
- 
-<h2>There are 2 ways to connect:</h2>
-1. **A jumpbox VM** within the VNet (Gives you a public-facing entry point into the network, apply NSG to restrict unknown IP addresses) </br>
-2. **Using a VPN** (VPN Gateway configures a P2S VPN connection from a local machine to the Virtual Network) </br>
-***(You can't access VMs with private IPs directly from the internet)***
+
+<h2>There are 2 ways to connect:</h2> 
+
+1. **A jumpbox VM within the VNet** - Gives you a public-facing entry point into the network, apply NSG to restrict unknown IP addresses </br>
+2. **Using a VPN Gateway** - Configures a P2S VPN connection from a local machine to the Virtual Network </br>
+*(You can't access VMs with private IPs directly from the internet)*
 
 <h1>Jumpbox VM</h1>
 
-Create a VM (*TestVM*) in the **EastUS VNet** and connect to it via RDP from a local machine 
+Create a public **Virtual Machine** (*TestVM: 135.232.101.89*) in the **EastUS VNet**  and connect to it via **RDP** from a local machine 
 
 ![Screenshot 2025-03-31 100952](https://github.com/user-attachments/assets/95ed09eb-2981-4769-8a51-1dc6bbfcb6b8)
 
-After deploying the VM (*TestVM*) into the **Web-Subnet** (*10.30.1.0/24*), it will be assigned a private IP address (*10.30.1.7*) from that range </br>
-***(When running ipconfig /all, you are seeing the VM’s internal IP address, not its public IP)***
+Once the **VM** (*TestVM*) is deployed to the **Web-Subnet** (*10.30.1.0/24*), it will be assigned a **private IP address** (*10.30.1.7*) from that range </br>
+(*When running **ipconfig /all**, you are seeing the VM’s internal IP address, not its public IP*)
 
 ![Screenshot 2025-04-07 154420](https://github.com/user-attachments/assets/79fe1846-8db4-4092-badd-a48d1c566deb)
 
@@ -213,7 +214,7 @@ Remote into ***EastUS-VM-HA*** through the TestVM via RDP (*Private IP*: ***10.3
 ![Screenshot 2025-04-07 162832](https://github.com/user-attachments/assets/64774458-8d10-42ae-9ad1-58a067a4c9d3)
 
 Ping **EastUS-VM-HA** (*10.30.1.4*) from the local machine</br>
-(Pings from my local machine or any device outside the VM's virtual network will not reach to the VM)
+(Pings from a local machine or any device outside the VM's virtual network will not reach to the VM)
 
 ![Screenshot 2025-04-07 163109](https://github.com/user-attachments/assets/c9c3aeaa-9607-4851-8587-c34a4cf6e8c5)
 
@@ -224,16 +225,16 @@ Then ping **EastUS-VM-HA** (*10.30.1.4*) through the TestVM since only machines 
 
 <h1>Azure Virtual Network Gateway (VPN)</h1>
 
-Create a **VPN** (*EastUS-VPN*) </br>
+Create a **Virtual Network Gateway (VPN)** (*EastUS-VPN*) </br>
 **Azure Portal > Search Virtual Network Gateway > Select the Create** </br>
-<code style="color : blue">(*Ignore the error*)</code>
+<code style="color : blue">(*Ignore the errors*)</code>
 
 ![Screenshot 2025-04-08 102553](https://github.com/user-attachments/assets/61b74575-3f67-4f01-b546-a2b8c5785641)
 ![Screenshot 2025-04-08 102605](https://github.com/user-attachments/assets/d313688d-fbb1-402c-a5a8-a2ca4cf9b8d2)
 
 Set up a Point to Site VPN access after creating a VPN in Azure </br>
 **In Virtual Network Gateways > Select the VPN (*EastUS-VPN*) > Settings > Point-to-site Configuration** </br>
-- Used ***192.168.100.0/24*** as the address pool so it wont overlap with the **local network** (*172.20.10.x*) & the **VNet subnet** (*10.30.x.x.*) </br>
+- Used ***192.168.100.0/24*** as the address pool so it won't overlap with the **local network** (*172.20.10.x*) & the **VNet subnet** (*10.30.x.x.*) </br>
 - **IKEv2** & **OpenVPN** is a great Windows option delivering flexibility across devices. </br>
 - **Azure Certificate Authentication** does not require additional infrastructure and uses certificates to verify clients (**Secure & Manageable**)
 
@@ -245,7 +246,7 @@ Open PowerShell and run ***$cert = New-SelfSignedCertificate*** command to gener
 ![Screenshot 2025-03-31 164438](https://github.com/user-attachments/assets/c73b2d9f-8a08-4301-b011-85056399dde2)
 
 Open **Run** (*Win + R*), type ***certmgr.msc*** and **Enter** or type in *certificate* in the Windows search bar and select ***'Manage user certificates'***</br>
-Navigate to **Personal** > **Certificates**. Find ***AzureVPNRootCert.cer*** and right-click, choose **'All Task' > Export**
+Navigate to **Personal** > **Certificates**. Find ***AzureVPNRootCert*** and right-click, choose **'All Task' > Export**
 
 ![Screenshot 2025-03-31 140038](https://github.com/user-attachments/assets/d2371880-ae2e-4108-9557-e479b59358c1)
 
@@ -302,16 +303,9 @@ Connect to **Prod-VNet-EastUS**
 ![Screenshot 2025-03-31 171747](https://github.com/user-attachments/assets/90fb18a2-91f6-442c-a28a-9fbcd053bc19)
 ![Screenshot 2025-03-31 171441](https://github.com/user-attachments/assets/061c1acb-6678-4863-acb1-576c65cf1cee)
 
-I hope this tutorial helped you learn a little bit about Network Security Protocols, subnets, Virutal Networks, load balancers, Virtual network gateway & Virtual Machines
-Now that we're done, DON'T FORGET TO CLEAN UP YOUR AZURE ENVIRONMENT so that you don't incur unnecessary charges.
-Close your Remote Desktop connection, delete the Resource Group(s) created at the beginning of this tutorial, and verify Resource Group deletion.
-
-
-
-Virtual network peering was implemented to enable seamless and secure connectivity between the East US and West US regions. In addition, to enhance security, NSGs were applied with security rules, custom subnets & a Virtual Network Gateway (VPN) was configured to securely connect an on-premises resource to Azure. 
-
-This project focuses on deploying a highly available web application across two Azure regions using Load Balancers & Traffic manager for cross-region failover. Load balancing was configured for both HTTP and HTTPS protocols, each paired with a health probe to monitor backend VM responsiveness and ensure service availability. The environment is segmented using custom subnets which improves manageability and security. Web-Subnet, which hosts the frontend VM, receives user traffic. App-Subnet, which handles the application server and is only accessible internally. DB-Subnet, which securely stores & manages the database server using private endpoints for security.
-
+I hope this tutorial has helped you learn a little bit about Network Security Protocols, subnets, Virtual Networks, load balancers, Virtual network gateways & Virtual Machines.
+DON'T FORGET TO CLEAN UP YOUR AZURE ENVIRONMENT so that you don't incur unnecessary charges.
+Close your Remote Desktop connection, delete the Resource Group(s) created at the beginning of this tutorial, and verify its completion.
 
 
 
